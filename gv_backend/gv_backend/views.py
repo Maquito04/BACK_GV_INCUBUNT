@@ -72,3 +72,37 @@ def profile(request):
     print(request.data)
 
     return Response("You are login with {}".format(request.user.username),status=status.HTTP_200_OK)
+
+@api_view(['GET','POST'])
+def users(request):
+    if request.method == 'GET':
+        users = User.objects.all()
+        serializer = UserSerializer(users, many=True)
+        return Response({"msg":"Se ha listado correctamente","data":serializer.data}, status=status.HTTP_200_OK)
+
+    elif request.method == 'POST':
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"msg":"El usuario ha sido creado correctamente","data":serializer.data}, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+@api_view(['GET', 'PUT', 'DELETE'])
+def user_detail(request, pk):
+    user = get_object_or_404(User, pk=pk)
+
+    if request.method == 'GET':
+        serializer = UserSerializer(user)
+        return Response({"msg":"El usuario se ha obtenido correctamente","data":serializer.data}, status=status.HTTP_200_OK)
+
+    elif request.method == 'PUT':
+        serializer = UserSerializer(user, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"msg":"El usuario se ha actualizado correctamente","data":serializer.data}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'DELETE':
+        user.delete()
+        return Response({"msg":"El usuario ha sido eliminado"},status=status.HTTP_204_NO_CONTENT)
