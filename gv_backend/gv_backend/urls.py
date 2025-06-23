@@ -25,4 +25,6 @@ urlpatterns = [
     re_path('profile', views.profile),
     path('user', views.users),
     path('user/<int:pk>', views.user_detail),
+    path('rol', views.roles),
+    path('rol/<int:pk>', views.roles_detail),
 ]

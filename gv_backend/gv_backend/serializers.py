@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from apps.app1.models import Rol
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -22,4 +23,19 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Error: El nombre de usuario ya está en uso.")
         if User.objects.filter(email=email).exists():
             raise serializers.ValidationError("Error: El correo electrónico ya está en uso.")
+        return data
+    
+class RolSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Rol
+        fields = ['id','name']
+    
+    def validate(self, data):
+        name = data.get('name')
+        
+        if name and len(name) < 4 and len(name) > 20:
+            raise serializers.ValidationError("Error: El nombre del rol debe tener entre 4 y 20 caracteres.")
+        
+        if Rol.objects.filter(name=name).exists():
+            raise serializers.ValidationError("Error: El nombre del rol ya está en uso.")
         return data
