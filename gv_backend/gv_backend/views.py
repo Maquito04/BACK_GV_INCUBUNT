@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404
 
 from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.authentication import TokenAuthentication
+from rest_framework.authentication import TokenAuthentication   
 
 
 from django.contrib.auth.models import User
@@ -74,29 +74,53 @@ def profile(request):
     return Response("You are login with {}".format(request.user.username),status=status.HTTP_200_OK)
 
 @api_view(['GET','POST'])
+@authentication_classes([TokenAuthentication]) 
+@permission_classes([IsAuthenticated])      
 def users(request):
     if request.method == 'GET':
+        if not request.user.is_staff:
+            return Response({"error":"No autorizado"}, status=status.HTTP_401_UNAUTHORIZED)
         users = User.objects.all()
         serializer = UserSerializer(users, many=True)
         return Response({"msg":"Se ha listado correctamente","data":serializer.data}, status=status.HTTP_200_OK)
 
     elif request.method == 'POST':
+        if not request.user.is_staff:
+            return Response({"error":"No autorizado"}, status=status.HTTP_401_UNAUTHORIZED)
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response({"msg":"El usuario ha sido creado correctamente","data":serializer.data}, status=status.HTTP_201_CREATED)
+            
+            user = User.objects.get(username=serializer.data['username'])
+            user.set_password(serializer.data['password'])
+            
+            user.save()
+
+            token = Token.objects.create(user=user)
+            
+            return Response({
+                'token': token.key,
+                'user': serializer.data            
+            }, status = status.HTTP_201_CREATED)
+            
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 @api_view(['GET', 'PUT', 'DELETE'])
+@authentication_classes([TokenAuthentication]) 
+@permission_classes([IsAuthenticated])     
 def user_detail(request, pk):
     user = get_object_or_404(User, pk=pk)
 
     if request.method == 'GET':
+        if not request.user.is_staff:
+            return Response({"error":"No autorizado"}, status=status.HTTP_401_UNAUTHORIZED)
         serializer = UserSerializer(user)
         return Response({"msg":"El usuario se ha obtenido correctamente","data":serializer.data}, status=status.HTTP_200_OK)
 
     elif request.method == 'PUT':
+        if not request.user.is_staff:
+            return Response({"error":"No autorizado"}, status=status.HTTP_401_UNAUTHORIZED)
         serializer = UserSerializer(user, data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -104,5 +128,7 @@ def user_detail(request, pk):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     elif request.method == 'DELETE':
+        if not request.user.is_staff:
+            return Response({"error":"No autorizado"}, status=status.HTTP_401_UNAUTHORIZED)
         user.delete()
         return Response({"msg":"El usuario ha sido eliminado"},status=status.HTTP_204_NO_CONTENT)
