@@ -19,19 +19,30 @@ from apps.app1.models import Permiso
 
 @api_view(['POST'])
 def login(request):
-    print(request.data)
-    user = get_object_or_404(User, email=request.data['email'])
+    try:
+        email = request.data.get('email')
+        password = request.data.get('password')
 
-    if not user.check_password(request.data['password']):
-        return Response({"error":"Invalid password"},status=status.HTTP_400_BAD_REQUEST)
+        if not email or not password:
+            return Response({"error": "Email and password are required"}, status=status.HTTP_400_BAD_REQUEST)
 
-    token, created = Token.objects.get_or_create(user=user)
-    serializer = UserSerializer(instance=user)
+        user = get_object_or_404(User, email=email)
 
-    return Response({
-        "token": token.key,
-        "user": serializer.data
-    }, status = status.HTTP_200_OK)
+        if not user.check_password(password):
+            return Response({"error": "Invalid password"}, status=status.HTTP_400_BAD_REQUEST)
+
+        token, created = Token.objects.get_or_create(user=user)
+        serializer = UserSerializer(instance=user)
+
+        return Response({
+            "token": token.key,
+            "user": serializer.data
+        }, status=status.HTTP_200_OK)
+
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 
