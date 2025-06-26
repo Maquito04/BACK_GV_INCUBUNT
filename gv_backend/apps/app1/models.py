@@ -11,7 +11,7 @@ class Rol(models.Model):
 
 class Permiso(models.Model):
     name = models.CharField(max_length=20, unique=True)
-    descripcionc = models.CharField(max_length=100, blank=True, null=True)
+    description = models.CharField(max_length=100, blank=True, null=True)
     
     class Meta:
         db_table = 'permisos'
