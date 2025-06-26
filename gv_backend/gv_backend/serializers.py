@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from apps.app1.models import Rol
+from apps.app1.models import Permiso
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -39,3 +40,23 @@ class RolSerializer(serializers.ModelSerializer):
         if Rol.objects.filter(name=name).exists():
             raise serializers.ValidationError("Error: El nombre del rol ya está en uso.")
         return data
+    
+class PermisoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Permiso
+        fields = ['id','name','description']
+    
+    def validate(self, data):
+        name = data.get('name')
+        description = data.get('description')
+        
+        if name and len(name) < 4 and len(name) > 20:
+            raise serializers.ValidationError("Error: El nombre del permiso debe tener entre 4 y 20 caracteres.")
+        if description and len(description) < 4 and len(description) > 255:
+            raise serializers.ValidationError("Error: La descripción del permiso debe tener entre 4 y 255 caracteres.")
+        
+        if Permiso.objects.filter(name=name).exists():
+            raise serializers.ValidationError("Error: El nombre del permiso ya está en uso.")
+        return data
+        
+        

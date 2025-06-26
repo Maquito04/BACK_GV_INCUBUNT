@@ -2,6 +2,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .serializers import UserSerializer
 from .serializers import RolSerializer
+from .serializers import PermisoSerializer
 from rest_framework.authtoken.models import Token
 from rest_framework import status
 from django.shortcuts import get_object_or_404
@@ -14,6 +15,7 @@ from rest_framework.authentication import TokenAuthentication
 
 from django.contrib.auth.models import User
 from apps.app1.models import Rol
+from apps.app1.models import Permiso
 
 @api_view(['POST'])
 def login(request):
@@ -114,7 +116,6 @@ def users(request):
         
 # OBTENER, EDITAR Y ELIMINAR USUARIOS
 # *******************************************************************************************
-
     
 @api_view(['GET', 'PUT', 'DELETE'])
 @authentication_classes([TokenAuthentication]) 
@@ -193,3 +194,53 @@ def roles_detail(request,pk):
             return Response({"error":"No autorizado"}, status=status.HTTP_401_UNAUTHORIZED)
         rol.delete()
         return Response({"msg":"Rol eliminado correctamente"}, status=status.HTTP_204_NO_CONTENT)
+    
+# CREAR Y LISTAR PERMISOS
+# *******************************************************************************************
+
+@api_view(['GET','POST'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def permisos(request):
+    if request.method == 'GET':
+        if not request.user.is_staff:
+            return Response({"error":"No autorizado"}, status=status.HTTP_401_UNAUTHORIZED)
+        permisos = Permiso.objects.all().order_by('id')
+        serializer = PermisoSerializer(permisos, many=True)
+        return Response({"msg":"Se ha listado correctamente","data":serializer.data}, status=status.HTTP_200_OK)
+    elif request.method == 'POST':
+        if not request.user.is_staff:
+            return Response({"error":"No autorizado"}, status=status.HTTP_401_UNAUTHORIZED)
+        serializer = PermisoSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"msg":"Permiso creado correctamente","data":serializer.data}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+# OBTENER, EDITAR Y ELIMINAR PERMISOS
+# *******************************************************************************************
+
+@api_view(['GET','PUT','DELETE'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def permisos_detail(request, pk):
+    permiso = get_object_or_404(Permiso, pk=pk)
+    
+    if request.method == 'GET':
+        if not request.user.is_staff:
+            return Response({"error":"No autorizado"}, status=status.HTTP_401_UNAUTHORIZED)
+        serializer = PermisoSerializer(permiso)
+        return Response({"msg":"Permiso obtenido correctamente","data":serializer.data}, status=status.HTTP_200_OK)
+    elif request.method == 'PUT':
+        if not request.user.is_staff:
+            return Response({"error":"No autorizado"}, status=status.HTTP_401_UNAUTHORIZED)
+        serializer = PermisoSerializer(permiso, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"msg":"Permiso actualizado correctamente","data":serializer.data}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    elif request.method == 'DELETE':
+        if not request.user.is_staff:
+            return Response({"error":"No autorizado"}, status=status.HTTP_401_UNAUTHORIZED)
+        permiso.delete()
+        return Response({"msg":"Permiso eliminado correctamente"}, status=status.HTTP_204_NO_CONTENT)

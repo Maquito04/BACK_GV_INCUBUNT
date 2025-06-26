@@ -27,4 +27,6 @@ urlpatterns = [
     path('user/<int:pk>', views.user_detail),
     path('rol', views.roles),
     path('rol/<int:pk>', views.roles_detail),
+    path('permiso', views.permisos),
+    path('permiso/<int:pk>', views.permisos_detail),
 ]

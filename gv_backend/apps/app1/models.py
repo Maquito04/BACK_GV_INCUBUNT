@@ -8,3 +8,14 @@ class Rol(models.Model):
 
     def __str__(self):
         return self.name
+
+class Permiso(models.Model):
+    name = models.CharField(max_length=20, unique=True)
+    descripcionc = models.CharField(max_length=100, blank=True, null=True)
+    
+    class Meta:
+        db_table = 'permisos'
+    
+    def __str__(self):
+        return self.name
+    
