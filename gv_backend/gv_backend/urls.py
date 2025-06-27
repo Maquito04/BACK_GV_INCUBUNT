@@ -20,7 +20,14 @@ from . import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    re_path('login', views.login),
-    re_path('register', views.register),
-    re_path('profile', views.profile)
+    path('login/', views.login),
+    path('register/', views.register),
+    path('profile/', views.profile),
+    path('user/', views.users),
+    path('user/<int:pk>/', views.user_detail),
+    path('rol/', views.roles),
+    path('rol/<int:pk>/', views.roles_detail),
+    path('permiso/', views.permisos),
+    path('permiso/<int:pk>/', views.permisos_detail),
+    path('roles-permisos/', views.roles_permisos),
 ]
